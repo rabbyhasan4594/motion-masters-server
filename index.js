@@ -31,7 +31,15 @@ async function run() {
 
 
 
-   
+    const classesCollection = client.db('motionMasters').collection('classes')
+
+
+
+    app.get('/classes',async(req,res)=>{
+        const result =await classesCollection.find().toArray();
+        res.send(result);
+    })
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
