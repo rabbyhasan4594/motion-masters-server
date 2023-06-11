@@ -45,6 +45,11 @@ async function run() {
         res.send(result);
     })
 
+    app.get('/instructors',async(req,res)=>{
+        const data =await classesCollection.find().toArray();
+        res.send(data);
+    })
+
 
 
     // Send a ping to confirm a successful connection
