@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const port = process.env.PORT || 5000
 
@@ -38,6 +39,16 @@ async function run() {
 
         const classesCollection = client.db('motionMasters').collection('classes');
         const usersCollection = client.db('motionMasters').collection('users');
+
+
+        app.post('/jwt', (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+      
+            res.send({ token })
+          })
+
+
 
 
         // users related api
