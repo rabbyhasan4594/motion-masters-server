@@ -39,9 +39,26 @@ async function run() {
 
         const classesCollection = client.db('motionMasters').collection('classes');
         const usersCollection = client.db('motionMasters').collection('users');
+        const selectedCollection = client.db('motionMasters').collection('selected');
 
 
+       //enroll api
 
+       app.post('/selected', async (req, res) => {
+        const item = req.body;
+        console.log(item.selectedId )
+
+        const query = { email: item.email,selectedId:item.selectedId}
+        const existingSelected = await selectedCollection.findOne(query);
+
+        if (existingSelected) {
+            return res.send({ message: 'user already Selected' })
+        }
+
+        const result = await selectedCollection.insertOne(item);
+        
+        res.send(result);
+      })
 
 
         
