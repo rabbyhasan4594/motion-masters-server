@@ -3,6 +3,7 @@ const app = express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
 const port = process.env.PORT || 5000
 
 
@@ -42,37 +43,37 @@ async function run() {
         const selectedCollection = client.db('motionMasters').collection('selected');
 
 
-       //enroll api
+        //enroll api
 
-       app.get('/selected', async (req, res) => {
-        const email = req.query.email;
-  
-        if (!email) {
-          res.send([]);
-        }
-        const query = { email: email };
-        const result = await selectedCollection.find(query).toArray();
-        res.send(result);
-      });
+        app.get('/selected', async (req, res) => {
+            const email = req.query.email;
 
-       app.post('/selected', async (req, res) => {
-        const item = req.body;
-        console.log(item.selectedId )
+            if (!email) {
+                res.send([]);
+            }
+            const query = { email: email };
+            const result = await selectedCollection.find(query).toArray();
+            res.send(result);
+        });
 
-        const query = { email: item.email,selectedId:item.selectedId}
-        const existingSelected = await selectedCollection.findOne(query);
+        app.post('/selected', async (req, res) => {
+            const item = req.body;
+            console.log(item.selectedId)
 
-        if (existingSelected) {
-            return res.send({ message: 'user already Selected' })
-        }
+            const query = { email: item.email, selectedId: item.selectedId }
+            const existingSelected = await selectedCollection.findOne(query);
 
-        const result = await selectedCollection.insertOne(item);
-        
-        res.send(result);
-      })
+            if (existingSelected) {
+                return res.send({ message: 'user already Selected' })
+            }
+
+            const result = await selectedCollection.insertOne(item);
+
+            res.send(result);
+        })
 
 
-        
+
 
         // users related api
 
@@ -80,7 +81,7 @@ async function run() {
         app.get('/users', async (req, res) => {
             const result = await usersCollection.find().toArray();
             res.send(result);
-          });
+        });
 
         app.post('/users', async (req, res) => {
             const user = req.body;
@@ -101,30 +102,30 @@ async function run() {
             console.log(id);
             const filter = { _id: new ObjectId(id) };
             const updateDoc = {
-              $set: {
-                role: 'admin'
-              },
+                $set: {
+                    role: 'admin'
+                },
             };
-      
+
             const result = await usersCollection.updateOne(filter, updateDoc);
             res.send(result);
-      
-          })
 
-          app.patch('/users/instructor/:id', async (req, res) => {
+        })
+
+        app.patch('/users/instructor/:id', async (req, res) => {
             const id = req.params.id;
             console.log(id);
             const filter = { _id: new ObjectId(id) };
             const updateDoc = {
-              $set: {
-                role: 'instructor'
-              },
+                $set: {
+                    role: 'instructor'
+                },
             };
-      
+
             const result = await usersCollection.updateOne(filter, updateDoc);
             res.send(result);
-      
-          })
+
+        })
 
 
         app.get('/classesAndInstructors', async (req, res) => {
@@ -138,7 +139,23 @@ async function run() {
         })
 
 
+        //payment
+        app.post("/create-payment-intent", async (req, res) => {
+            const { price } = req.body;
+            const amount = price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
 
+                amount: amount,
+                currency: "usd",
+                payment_method_types: [
+                    "card"
+                ],
+            });
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            });
+
+        })
 
 
         // Send a ping to confirm a successful connection
