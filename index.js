@@ -65,7 +65,15 @@ async function run() {
             res.send({ token })
           })
 
-
+          const verifyAdmin = async (req, res, next) => {
+            const email = req.decoded.email;
+            const query = { email: email }
+            const user = await usersCollection.findOne(query);
+            if (user?.role !== 'admin') {
+              return res.status(403).send({ error: true, message: 'forbidden message' });
+            }
+            next();
+          }
 
 
         //enroll api
@@ -103,7 +111,7 @@ async function run() {
         // users related api
 
 
-        app.get('/users', async (req, res) => {
+        app.get('/users',verifyJWT,verifyAdmin, async (req, res) => {
             const result = await usersCollection.find().toArray();
             res.send(result);
         });
@@ -179,10 +187,19 @@ async function run() {
 
 
         app.get('/classesAndInstructors', async (req, res) => {
-            const result = await classesCollection.find().toArray();
+
+            const result = await classesCollection.find({
+                status:"approved"
+            }).toArray();
             res.send(result);
         })
 
+
+        app.post('/classesAndInstructors', verifyJWT, async (req, res) => {
+            const newClass = req.body;
+            const result = await classesCollection.insertOne(newClass)
+            res.send(result);
+          })
         app.get('/popular', async (req, res) => {
             const result = await classesCollection.find({}).limit(6).toArray();
             res.send(result);
