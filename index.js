@@ -98,8 +98,27 @@ async function run() {
             if (!email) {
                 res.send([]);
             }
-            const query = { email: email };
-            const result = await selectedCollection.find(query).toArray();
+            // const query = { email: email };
+            const result = await selectedCollection.find(
+                {   
+                    email: email,
+                    payment:"no"
+                    
+                }).toArray();
+            res.send(result);
+        });
+        app.get('/selectedPayment', async (req, res) => {
+            const email = req.query.email;
+
+            if (!email) {
+                res.send([]);
+            }
+            // const query = { email: email };
+            const result = await selectedCollection.find(
+                {   
+                    email: email,
+                    payment: "yes"
+                }).toArray();
             res.send(result);
         });
 
@@ -135,15 +154,25 @@ async function run() {
             res.send(result);
 
         })
+        app.delete('/selected/class/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await selectedCollection.deleteOne(query);
+            res.send(result);
+        })
 
 
 
 
         app.get("/dashboard/payment/:id", async (req, res) => {
-            const viewDetails = await selectedCollection.findOne({
-                _id: new ObjectId(req.params.id),
+            const id = req.params.id;
+            console.log(id);
+           
+            const result = await selectedCollection.findOne({
+                _id: new ObjectId(id)
             });
-            res.send(viewDetails);
+            console.log(result);
+            res.send(result);
         });
 
 
@@ -274,10 +303,8 @@ async function run() {
             console.log(id);
             const filter = { _id: new ObjectId(id) };
             const updateDoc = {
-                $inc: { enroll: 1 },
-                $inc: { availableSeats: -1 },
+                $inc: { enroll: 1, availableSeats: -1 }
             };
-
             const result = await classesCollection.updateOne(filter, updateDoc);
             res.send(result);
 
@@ -290,13 +317,15 @@ async function run() {
             res.send(result);
         })
         app.get('/popular', async (req, res) => {
-            const result = await classesCollection.find({}).limit(6).toArray();
+            const result = await classesCollection.find({
+                status: 'approved'
+            }).sort({ enroll: -1 }).limit(6).toArray();
             res.send(result);
         })
 
 
         //payment
-        app.post('/payments', verifyJWT, async (req, res) => {
+        app.post('/payment', verifyJWT, async (req, res) => {
             const payment = req.body;
             const insertResult = await paymentCollection.insertOne(payment);
 
