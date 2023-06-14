@@ -227,12 +227,46 @@ async function run() {
         })
 
 
-        app.get('/classesAndInstructors', async (req, res) => {
+        app.get('/classesAndInstructorsApproved', async (req, res) => {
 
             const result = await classesCollection.find({
                 status: "approved"
             }).toArray();
             res.send(result);
+        })
+        app.get('/classesAndInstructors', async (req, res) => {
+
+            const result = await classesCollection.find().toArray();
+            res.send(result);
+        })
+
+        app.patch('/classesAndInstructors/approve/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    status: 'approved'
+                },
+            };
+
+            const result = await classesCollection.updateOne(filter, updateDoc);
+            res.send(result);
+
+        })
+        app.patch('/classesAndInstructors/deny/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    status: 'denied'
+                },
+            };
+
+            const result = await classesCollection.updateOne(filter, updateDoc);
+            res.send(result);
+
         })
 
         app.patch('/classesAndInstructors/payment/:id', async (req, res) => {
